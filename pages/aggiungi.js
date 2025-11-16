@@ -1,9 +1,8 @@
 import Header from "../components/Header";
-import { getSupabaseClient } from "../utils/supabaseClient";
+import { supabase } from "../utils/supabaseClient";
 import { useEffect, useState } from "react";
 
 export default function Aggiungi() {
-  const [supabase, setSupabase] = useState(null);
   const [prodotti, setProdotti] = useState([]);
   const [selected, setSelected] = useState("");
   const [nome, setNome] = useState("");
@@ -12,13 +11,8 @@ export default function Aggiungi() {
   const [scadenza, setScadenza] = useState("");
 
   useEffect(() => {
-    // Creiamo il client solo lato client
-    setSupabase(getSupabaseClient());
+    loadProdotti();
   }, []);
-
-  useEffect(() => {
-    if (supabase) loadProdotti();
-  }, [supabase]);
 
   async function loadProdotti() {
     const { data } = await supabase.from("prodotti").select("*").order("nome");
@@ -27,23 +21,28 @@ export default function Aggiungi() {
 
   async function addProdotto(e) {
     e.preventDefault();
+    if (!nome) return alert("Inserisci il nome del prodotto");
     await supabase.from("prodotti").insert([{ nome, descrizione }]);
     alert("Prodotto aggiunto!");
-    setNome(""); setDescrizione("");
+    setNome("");
+    setDescrizione("");
     loadProdotti();
   }
 
   async function addLotto(e) {
     e.preventDefault();
+    if (!selected || !quantita || !scadenza) return alert("Compila tutti i campi del lotto");
     await supabase.from("lotti").insert([{ prodotto_id: selected, quantita, scadenza }]);
     alert("Lotto aggiunto!");
-    setSelected(""); setQuantita(""); setScadenza("");
+    setQuantita("");
+    setScadenza("");
   }
 
   return (
     <>
       <Header />
-      <div className="container">
+      <div className="container mt-4">
+
         <h2>Aggiungi nuovo prodotto</h2>
         <form onSubmit={addProdotto} className="card p-3 mb-4">
           <input className="form-control mb-2" placeholder="Nome" value={nome} onChange={e => setNome(e.target.value)} />
@@ -53,7 +52,7 @@ export default function Aggiungi() {
 
         <h2>Aggiungi lotto</h2>
         <form onSubmit={addLotto} className="card p-3">
-          <select className="form-select mb-2" value={selected} onChange={e => setSelected(e.target.value)}>
+          <select className="form-select mb-2" onChange={e => setSelected(e.target.value)} value={selected}>
             <option value="">Seleziona prodotto</option>
             {prodotti.map(p => (
               <option key={p.id} value={p.id}>{p.nome}</option>
@@ -63,6 +62,7 @@ export default function Aggiungi() {
           <input type="date" className="form-control mb-2" value={scadenza} onChange={e => setScadenza(e.target.value)} />
           <button className="btn btn-primary">Aggiungi Lotto</button>
         </form>
+
       </div>
     </>
   );
