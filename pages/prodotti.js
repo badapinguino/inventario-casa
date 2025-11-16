@@ -1,41 +1,45 @@
-import Header from "../components/Header";
-import { supabase } from "../utils/supabaseClient";
-import { useEffect, useState } from "react";
-import Link from "next/link";
+import Header from '../components/Header';
+import { supabase } from '../utils/supabaseClient';
+import Link from 'next/link';
+import { useEffect, useState } from 'react';
 
 export default function Prodotti() {
-  const [prodotti, setProdotti] = useState([]);
+  const [inventario, setInventario] = useState([]);
 
   useEffect(() => {
-    loadProdotti();
+    loadInventario();
   }, []);
 
-  async function loadProdotti() {
-    const { data } = await supabase.from("prodotti").select("*").order("nome");
-    setProdotti(data || []);
+  async function loadInventario() {
+    const { data } = await supabase.from('v_inventario').select('*');
+    setInventario(data || []);
   }
 
   return (
     <>
       <Header />
-      <div className="container mt-4">
-        <h2>Lista Prodotti</h2>
+      <div className="container">
+        <h2>Inventario</h2>
         <table className="table table-striped">
           <thead>
             <tr>
               <th>Nome</th>
-              <th>Descrizione</th>
+              <th>Marca</th>
+              <th>Quantità</th>
+              <th>Prossima scadenza</th>
               <th>Azioni</th>
             </tr>
           </thead>
           <tbody>
-            {prodotti.map(p => (
-              <tr key={p.id}>
-                <td>{p.nome}</td>
-                <td>{p.descrizione}</td>
+            {inventario.map(item => (
+              <tr key={item.prodotto_id}>
+                <td>{item.nome}</td>
+                <td>{item.marca}</td>
+                <td>{item.quantita_totale}</td>
+                <td>{item.prossima_scadenza || '-'}</td>
                 <td>
-                  <Link href={`/modifica/${p.id}`} className="btn btn-warning btn-sm me-2">Modifica</Link>
-                  <Link href={`/rimuovi/${p.id}`} className="btn btn-danger btn-sm">Rimuovi</Link>
+                  <Link href={`/modifica/${item.prodotto_id}`} className="btn btn-sm btn-primary me-2">Modifica</Link>
+                  <Link href={`/rimuovi/${item.prodotto_id}`} className="btn btn-sm btn-danger">Rimuovi</Link>
                 </td>
               </tr>
             ))}

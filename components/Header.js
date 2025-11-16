@@ -1,5 +1,4 @@
-import Link from 'next/link'
-import 'bootstrap/dist/css/bootstrap.min.css'
+import Link from 'next/link';
 
 export default function Header() {
   return (
@@ -9,7 +8,7 @@ export default function Header() {
         <div className="collapse navbar-collapse">
           <ul className="navbar-nav me-auto">
             <li className="nav-item">
-              <Link href="/" className="nav-link">Prodotti</Link>
+              <Link href="/prodotti" className="nav-link">Prodotti</Link>
             </li>
             <li className="nav-item">
               <Link href="/aggiungi" className="nav-link">Aggiungi</Link>
@@ -18,5 +17,5 @@ export default function Header() {
         </div>
       </div>
     </nav>
-  )
+  );
 }
