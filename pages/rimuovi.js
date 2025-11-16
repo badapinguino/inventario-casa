@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { supabase } from '../lib/supabase';
+import { getSupabaseClient } from "../utils/supabaseClient";
 import { Container, Table, Button } from 'react-bootstrap';
 
 export default function Rimuovi() {
