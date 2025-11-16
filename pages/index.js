@@ -16,7 +16,7 @@ export default function Home() {
   }, []);
 
   const fetchInventario = async () => {
-    let { data, error } = await supabase
+    const { data, error } = await supabase
       .from("v_inventario")
       .select("*")
       .order("nome");
@@ -25,9 +25,9 @@ export default function Home() {
   };
 
   return (
-    <div>
+    <div style={{ fontFamily: "Arial, sans-serif", margin: "0 auto", maxWidth: "900px" }}>
       <Header />
-      <h1>Inventario Casa</h1>
+      <h1 style={{ textAlign: "center", margin: "1rem 0" }}>Inventario Casa</h1>
       <ProdottoList prodotti={inventario} />
     </div>
   );
