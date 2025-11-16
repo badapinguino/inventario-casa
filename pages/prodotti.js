@@ -8,27 +8,23 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 );
 
-export default function Home() {
-  const [inventario, setInventario] = useState([]);
+export default function Prodotti() {
+  const [prodotti, setProdotti] = useState([]);
 
   useEffect(() => {
-    fetchInventario();
+    fetchProdotti();
   }, []);
 
-  const fetchInventario = async () => {
-    let { data, error } = await supabase
-      .from("v_inventario")
-      .select("*")
-      .order("nome");
-    if (error) console.error(error);
-    else setInventario(data);
+  const fetchProdotti = async () => {
+    let { data } = await supabase.from("v_inventario").select("*").order("nome");
+    setProdotti(data);
   };
 
   return (
     <div>
       <Header />
-      <h1>Inventario Casa</h1>
-      <ProdottoList prodotti={inventario} />
+      <h1>Lista Prodotti</h1>
+      <ProdottoList prodotti={prodotti} />
     </div>
   );
 }
