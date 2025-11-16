@@ -1,38 +1,26 @@
-import { useRouter } from 'next/router';
-import Header from '../../components/Header';
-import { supabase } from '../../utils/supabaseClient';
-import { useEffect, useState } from 'react';
+import { useEffect } from "react";
+import { useRouter } from "next/router";
+import { supabase } from "../../utils/supabaseClient";
+import Header from "../../components/Header";
 
-export default function Rimuovi() {
+export default function RimuoviProdotto() {
   const router = useRouter();
   const { id } = router.query;
 
-  const [prodotto, setProdotto] = useState(null);
-
   useEffect(() => {
-    if (id) loadProdotto();
+    if (!id) return;
+    removeProdotto();
   }, [id]);
 
-  async function loadProdotto() {
-    const { data } = await supabase.from('prodotti').select('*').eq('id', id).single();
-    setProdotto(data);
+  async function removeProdotto() {
+    const confirmDelete = confirm("Vuoi eliminare completamente questo prodotto e tutti i suoi lotti?");
+    if (!confirmDelete) {
+      router.push("/prodotti");
+      return;
+    }
+    await supabase.from("prodotti").delete().eq("id", id);
+    router.push("/prodotti");
   }
 
-  async function eliminaProdotto() {
-    await supabase.from('prodotti').delete().eq('id', id);
-    alert('Prodotto rimosso!');
-    router.push('/prodotti');
-  }
-
-  if (!prodotto) return <Header /><div className="container">Caricamento...</div>;
-
-  return (
-    <>
-      <Header />
-      <div className="container">
-        <h2>Rimuovi {prodotto.nome}</h2>
-        <button className="btn btn-danger" onClick={eliminaProdotto}>Elimina Prodotto (tutti i lotti)</button>
-      </div>
-    </>
-  );
+  return <><Header /><div className="container mt-4">Eliminazione in corso...</div></>;
 }
