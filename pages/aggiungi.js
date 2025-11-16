@@ -3,18 +3,22 @@ import { getSupabaseClient } from "../utils/supabaseClient";
 import { useEffect, useState } from "react";
 
 export default function Aggiungi() {
-  const supabase = getSupabaseClient();
-
+  const [supabase, setSupabase] = useState(null);
   const [prodotti, setProdotti] = useState([]);
   const [selected, setSelected] = useState("");
-
   const [nome, setNome] = useState("");
   const [descrizione, setDescrizione] = useState("");
-
   const [quantita, setQuantita] = useState("");
   const [scadenza, setScadenza] = useState("");
 
-  useEffect(() => { loadProdotti(); }, []);
+  useEffect(() => {
+    // Creiamo il client solo lato client
+    setSupabase(getSupabaseClient());
+  }, []);
+
+  useEffect(() => {
+    if (supabase) loadProdotti();
+  }, [supabase]);
 
   async function loadProdotti() {
     const { data } = await supabase.from("prodotti").select("*").order("nome");
@@ -40,7 +44,6 @@ export default function Aggiungi() {
     <>
       <Header />
       <div className="container">
-
         <h2>Aggiungi nuovo prodotto</h2>
         <form onSubmit={addProdotto} className="card p-3 mb-4">
           <input className="form-control mb-2" placeholder="Nome" value={nome} onChange={e => setNome(e.target.value)} />
@@ -50,16 +53,16 @@ export default function Aggiungi() {
 
         <h2>Aggiungi lotto</h2>
         <form onSubmit={addLotto} className="card p-3">
-          <select className="form-select mb-2" onChange={e => setSelected(e.target.value)} value={selected}>
+          <select className="form-select mb-2" value={selected} onChange={e => setSelected(e.target.value)}>
             <option value="">Seleziona prodotto</option>
-            {prodotti.map(p => <option key={p.id} value={p.id}>{p.nome}</option>)}
+            {prodotti.map(p => (
+              <option key={p.id} value={p.id}>{p.nome}</option>
+            ))}
           </select>
-
           <input type="number" className="form-control mb-2" placeholder="Quantità" value={quantita} onChange={e => setQuantita(e.target.value)} />
           <input type="date" className="form-control mb-2" value={scadenza} onChange={e => setScadenza(e.target.value)} />
           <button className="btn btn-primary">Aggiungi Lotto</button>
         </form>
-
       </div>
     </>
   );
