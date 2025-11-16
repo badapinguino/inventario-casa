@@ -1,65 +1,42 @@
-"use client";
+import Header from "../../components/Header";
+import { getSupabaseClient } from "../../utils/supabaseClient";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/router";
 
-import { useRouter, useParams } from "next/navigation";
-import { createClient } from "@supabase/supabase-js";
-import { useState, useEffect } from "react";
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-);
-
-export default function RimuoviOggetto() {
+export default function Rimuovi() {
   const router = useRouter();
-  const params = useParams();
-  const id = params.id;
+  const { id } = router.query;
+  const supabase = getSupabaseClient();
 
-  const [oggetto, setOggetto] = useState(null);
+  const [prodotto, setProdotto] = useState(null);
 
   useEffect(() => {
-    const load = async () => {
-      const { data } = await supabase
-        .from("oggetti")
-        .select("*")
-        .eq("id", id)
-        .single();
-      setOggetto(data);
-    };
-    load();
+    if (id) loadProdotto();
   }, [id]);
 
-  const handleDelete = async () => {
-    await supabase.from("oggetti").delete().eq("id", id);
-    router.push("/oggetti");
-  };
+  async function loadProdotto() {
+    const { data } = await supabase.from("prodotti").select("*").eq("id", id).single();
+    setProdotto(data);
+  }
 
-  if (!oggetto) return <p>Caricamento...</p>;
+  async function deleteProdotto() {
+    await supabase.from("prodotti").delete().eq("id", id);
+    alert("Prodotto rimosso!");
+    router.push("/prodotti");
+  }
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4 text-red-700">
-        Rimuovi Oggetto
-      </h1>
-
-      <p className="mb-4">
-        Sei sicuro di voler eliminare <strong>{oggetto.nome}</strong>?
-      </p>
-
-      <div className="flex gap-3">
-        <button
-          onClick={handleDelete}
-          className="bg-red-600 text-white p-3 rounded"
-        >
-          Elimina
-        </button>
-
-        <button
-          onClick={() => router.back()}
-          className="bg-gray-400 text-white p-3 rounded"
-        >
-          Annulla
-        </button>
+    <>
+      <Header />
+      <div className="container">
+        <h2>Rimuovi Prodotto</h2>
+        {prodotto ? (
+          <>
+            <p>Sei sicuro di voler rimuovere il prodotto <strong>{prodotto.nome}</strong>?</p>
+            <button className="btn btn-danger" onClick={deleteProdotto}>Rimuovi</button>
+          </>
+        ) : <p>Caricamento...</p>}
       </div>
-    </div>
+    </>
   );
 }

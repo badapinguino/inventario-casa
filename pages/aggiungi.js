@@ -3,6 +3,8 @@ import { getSupabaseClient } from "../utils/supabaseClient";
 import { useEffect, useState } from "react";
 
 export default function Aggiungi() {
+  const supabase = getSupabaseClient();
+
   const [prodotti, setProdotti] = useState([]);
   const [selected, setSelected] = useState("");
 
@@ -12,35 +14,26 @@ export default function Aggiungi() {
   const [quantita, setQuantita] = useState("");
   const [scadenza, setScadenza] = useState("");
 
-  useEffect(() => {
-    loadProdotti();
-  }, []);
+  useEffect(() => { loadProdotti(); }, []);
 
   async function loadProdotti() {
-    const supabase = getSupabaseClient();
     const { data } = await supabase.from("prodotti").select("*").order("nome");
-    setProdotti(data);
+    setProdotti(data || []);
   }
 
   async function addProdotto(e) {
     e.preventDefault();
-    const supabase = getSupabaseClient();
     await supabase.from("prodotti").insert([{ nome, descrizione }]);
     alert("Prodotto aggiunto!");
-    setNome("");
-    setDescrizione("");
+    setNome(""); setDescrizione("");
     loadProdotti();
   }
 
   async function addLotto(e) {
     e.preventDefault();
-    const supabase = getSupabaseClient();
-    await supabase.from("lotti").insert([
-      { prodotto_id: selected, quantita, scadenza }
-    ]);
+    await supabase.from("lotti").insert([{ prodotto_id: selected, quantita, scadenza }]);
     alert("Lotto aggiunto!");
-    setQuantita("");
-    setScadenza("");
+    setSelected(""); setQuantita(""); setScadenza("");
   }
 
   return (
@@ -59,9 +52,7 @@ export default function Aggiungi() {
         <form onSubmit={addLotto} className="card p-3">
           <select className="form-select mb-2" onChange={e => setSelected(e.target.value)} value={selected}>
             <option value="">Seleziona prodotto</option>
-            {prodotti.map(p => (
-              <option key={p.id} value={p.id}>{p.nome}</option>
-            ))}
+            {prodotti.map(p => <option key={p.id} value={p.id}>{p.nome}</option>)}
           </select>
 
           <input type="number" className="form-control mb-2" placeholder="Quantità" value={quantita} onChange={e => setQuantita(e.target.value)} />

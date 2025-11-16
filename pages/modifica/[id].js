@@ -1,117 +1,50 @@
-"use client";
+import Header from "../../components/Header";
+import { getSupabaseClient } from "../../utils/supabaseClient";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/router";
 
-import { useState, useEffect } from "react";
-import { useRouter, useParams } from "next/navigation";
-import { createClient } from "@supabase/supabase-js";
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-);
-
-export default function ModificaOggetto() {
+export default function Modifica() {
   const router = useRouter();
-  const params = useParams();
-  const id = params.id;
+  const { id } = router.query;
+  const supabase = getSupabaseClient();
 
-  const [loading, setLoading] = useState(true);
-  const [oggetto, setOggetto] = useState({
-    nome: "",
-    descrizione: "",
-    stanza: "",
-    quantita: 1,
-  });
+  const [prodotto, setProdotto] = useState(null);
+  const [nome, setNome] = useState("");
+  const [descrizione, setDescrizione] = useState("");
 
   useEffect(() => {
-    const fetchOggetto = async () => {
-      const { data, error } = await supabase
-        .from("oggetti")
-        .select("*")
-        .eq("id", id)
-        .single();
-
-      if (error) console.error(error);
-      else setOggetto(data);
-
-      setLoading(false);
-    };
-
-    fetchOggetto();
+    if (id) loadProdotto();
   }, [id]);
 
-  const handleSave = async () => {
-    const { error } = await supabase
-      .from("oggetti")
-      .update({
-        nome: oggetto.nome,
-        descrizione: oggetto.descrizione,
-        stanza: oggetto.stanza,
-        quantita: oggetto.quantita,
-      })
-      .eq("id", id);
-
-    if (error) {
-      alert("Errore nel salvataggio");
-      console.error(error);
-    } else {
-      router.push("/oggetti");
+  async function loadProdotto() {
+    const { data } = await supabase.from("prodotti").select("*").eq("id", id).single();
+    if (data) {
+      setProdotto(data);
+      setNome(data.nome);
+      setDescrizione(data.descrizione);
     }
-  };
+  }
 
-  if (loading) return <p>Caricamento...</p>;
+  async function saveProdotto(e) {
+    e.preventDefault();
+    await supabase.from("prodotti").update({ nome, descrizione }).eq("id", id);
+    alert("Prodotto aggiornato!");
+    router.push("/prodotti");
+  }
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">Modifica Oggetto</h1>
-
-      <div className="flex flex-col gap-3">
-        <input
-          className="border p-2 rounded"
-          placeholder="Nome"
-          value={oggetto.nome}
-          onChange={(e) => setOggetto({ ...oggetto, nome: e.target.value })}
-        />
-
-        <textarea
-          className="border p-2 rounded"
-          placeholder="Descrizione"
-          value={oggetto.descrizione}
-          onChange={(e) =>
-            setOggetto({ ...oggetto, descrizione: e.target.value })
-          }
-        />
-
-        <input
-          className="border p-2 rounded"
-          placeholder="Stanza"
-          value={oggetto.stanza}
-          onChange={(e) => setOggetto({ ...oggetto, stanza: e.target.value })}
-        />
-
-        <input
-          type="number"
-          className="border p-2 rounded"
-          placeholder="Quantità"
-          value={oggetto.quantita}
-          onChange={(e) =>
-            setOggetto({ ...oggetto, quantita: Number(e.target.value) })
-          }
-        />
-
-        <button
-          onClick={handleSave}
-          className="bg-blue-600 text-white p-3 rounded"
-        >
-          Salva Modifiche
-        </button>
-
-        <button
-          onClick={() => router.back()}
-          className="bg-gray-400 text-white p-3 rounded"
-        >
-          Annulla
-        </button>
+    <>
+      <Header />
+      <div className="container">
+        <h2>Modifica Prodotto</h2>
+        {prodotto ? (
+          <form onSubmit={saveProdotto} className="card p-3">
+            <input className="form-control mb-2" value={nome} onChange={e => setNome(e.target.value)} />
+            <input className="form-control mb-2" value={descrizione} onChange={e => setDescrizione(e.target.value)} />
+            <button className="btn btn-primary">Salva</button>
+          </form>
+        ) : <p>Caricamento...</p>}
       </div>
-    </div>
+    </>
   );
 }
