@@ -9,10 +9,48 @@ import { Plus, Trash2, Edit2, Package, TrendingDown, Calendar, BarChart3, AlertC
 const SUPABASE_ANON_KEY = typeof window !== 'undefined' && window.NEXT_PUBLIC_SUPABASE_ANON_KEY
   ? window.NEXT_PUBLIC_SUPABASE_ANON_KEY
   : 'tua-anon-key'; */
-
 // All'inizio del file, prima del componente
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+// Componente per mostrare info sul lotto con scadenza più vicina
+function LottoScadenzaInfo({ prodottoId, prossimaScadenza }) {
+  const [lottoInfo, setLottoInfo] = useState(null);
+
+  useEffect(() => {
+    const fetchInfo = async () => {
+      try {
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/lotti?prodotto_id=eq.${prodottoId}&select=*&order=data_scadenza.asc.nullslast`, {
+          headers: {
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+          }
+        });
+        const lottiData = await response.json();
+        const lottoConScadenzaPiuVicina = lottiData.find(l => l.data_scadenza);
+        if (lottoConScadenzaPiuVicina) {
+          setLottoInfo({
+            quantita: lottoConScadenzaPiuVicina.quantita,
+            data: lottoConScadenzaPiuVicina.data_scadenza
+          });
+        }
+      } catch (error) {
+        console.error('Errore caricamento info lotto:', error);
+      }
+    };
+    fetchInfo();
+  }, [prodottoId]);
+
+  if (!lottoInfo) return null;
+
+  return (
+    <div className="text-sm text-orange-700 bg-orange-50 px-3 py-2 rounded-lg inline-block">
+      <Calendar size={14} className="inline mr-1" />
+      <span className="font-semibold">{lottoInfo.quantita} unità</span> scadono il{' '}
+      <span className="font-semibold">{new Date(lottoInfo.data).toLocaleDateString('it-IT')}</span>
+    </div>
+  );
+}
 
 export default function InventarioCantina() {
   const [activeTab, setActiveTab] = useState('inventario');
@@ -86,6 +124,63 @@ export default function InventarioCantina() {
       setLotti(prev => ({ ...prev, [prodottoId]: data || [] }));
     } catch (error) {
       console.error('Errore caricamento lotti:', error);
+    }
+  };
+
+  // Calcola urgenza scadenza (giorni rimanenti)
+  const getScadenzaUrgency = (dataScadenza) => {
+    if (!dataScadenza) return null;
+    const oggi = new Date();
+    oggi.setHours(0, 0, 0, 0);
+    const scadenza = new Date(dataScadenza);
+    scadenza.setHours(0, 0, 0, 0);
+    const giorniRimanenti = Math.floor((scadenza - oggi) / (1000 * 60 * 60 * 24));
+    return giorniRimanenti;
+  };
+
+  // Ottieni classe colore badge in base ai giorni
+  const getBadgeClass = (giorni) => {
+    if (giorni === null) return 'bg-gray-100 text-gray-600';
+    if (giorni < 0) return 'bg-black text-white'; // Scaduto
+    if (giorni <= 7) return 'bg-red-600 text-white';
+    if (giorni <= 30) return 'bg-orange-500 text-white';
+    if (giorni <= 60) return 'bg-yellow-500 text-white';
+    return 'bg-green-500 text-white';
+  };
+
+  // Ottieni testo urgenza
+  const getUrgencyText = (giorni) => {
+    if (giorni === null) return 'Senza scadenza';
+    if (giorni < 0) return 'SCADUTO!';
+    if (giorni === 0) return 'Scade oggi!';
+    if (giorni === 1) return 'Scade domani!';
+    if (giorni <= 7) return `Scade tra ${giorni} giorni`;
+    if (giorni <= 30) return `Scade tra ${giorni} giorni`;
+    return `Scade tra ${giorni} giorni`;
+  };
+
+  // Calcola info sui lotti per un prodotto
+  const getLottiInfo = async (prodottoId) => {
+    try {
+      const response = await fetch(`${SUPABASE_URL}/rest/v1/lotti?prodotto_id=eq.${prodottoId}&select=*&order=data_scadenza.asc.nullslast`, {
+        headers: {
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+        }
+      });
+      const lottiData = await response.json();
+      
+      // Trova lotto con scadenza più vicina
+      const lottoConScadenzaPiuVicina = lottiData.find(l => l.data_scadenza);
+      if (!lottoConScadenzaPiuVicina) return null;
+      
+      return {
+        quantitaProssimaScadenza: lottoConScadenzaPiuVicina.quantita,
+        dataScadenza: lottoConScadenzaPiuVicina.data_scadenza
+      };
+    } catch (error) {
+      console.error('Errore calcolo lotti info:', error);
+      return null;
     }
   };
 
@@ -389,11 +484,23 @@ export default function InventarioCantina() {
               </div>
             ) : (
               <div className="grid gap-4">
-                {prodottiFiltrati.map(p => (
+                {prodottiFiltrati.map(p => {
+                  const giorni = getScadenzaUrgency(p.prossima_scadenza);
+                  const badgeClass = getBadgeClass(giorni);
+                  const urgencyText = getUrgencyText(giorni);
+                  
+                  return (
                   <div key={p.prodotto_id} className="bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition-shadow">
                     <div className="flex justify-between items-start">
                       <div className="flex-1">
-                        <h3 className="text-xl font-semibold text-gray-800">{p.nome}</h3>
+                        <div className="flex items-center gap-3">
+                          <h3 className="text-xl font-semibold text-gray-800">{p.nome}</h3>
+                          {p.prossima_scadenza && (
+                            <span className={`px-2 py-1 rounded-full text-xs font-bold ${badgeClass}`}>
+                              {urgencyText}
+                            </span>
+                          )}
+                        </div>
                         <div className="flex gap-4 mt-2 text-sm text-gray-600 flex-wrap">
                           {p.marca && <span className="bg-gray-100 px-2 py-1 rounded">🏷️ {p.marca}</span>}
                           {p.categoria && <span className="bg-blue-50 px-2 py-1 rounded">📁 {p.categoria}</span>}
@@ -401,15 +508,12 @@ export default function InventarioCantina() {
                           {p.formato && <span className="bg-green-50 px-2 py-1 rounded">📦 {p.formato}</span>}
                         </div>
                         {p.note && <p className="text-sm text-gray-500 mt-2 italic">{p.note}</p>}
-                        <div className="flex gap-6 mt-3">
+                        <div className="flex flex-col gap-2 mt-3">
                           <span className="text-lg font-bold text-blue-600">
-                            Quantità: {p.quantita_totale}
+                            Quantità totale: {p.quantita_totale}
                           </span>
                           {p.prossima_scadenza && (
-                            <span className="text-sm text-orange-600">
-                              <Calendar size={14} className="inline mr-1" />
-                              Scadenza: {new Date(p.prossima_scadenza).toLocaleDateString('it-IT')}
-                            </span>
+                            <LottoScadenzaInfo prodottoId={p.prodotto_id} prossimaScadenza={p.prossima_scadenza} />
                           )}
                         </div>
                       </div>
@@ -445,7 +549,8 @@ export default function InventarioCantina() {
                       </div>
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </>
