@@ -76,7 +76,7 @@ export default function InventarioCantina() {
     nome: '', marca: '', categoria: '', sottocategoria: '', formato: '', note: ''
   });
   const [newLotto, setNewLotto] = useState({
-    quantita: 1, data_scadenza: ''
+    quantita: 1, data_scadenza: '', ubicazione_principale: 'Cantina', ubicazione_dettaglio: 'Armadio Grande'
   });
 
   // Verifica configurazione
@@ -263,13 +263,15 @@ export default function InventarioCantina() {
         body: JSON.stringify({
           prodotto_id: selectedProduct.prodotto_id,
           quantita: parseInt(newLotto.quantita),
-          data_scadenza: newLotto.data_scadenza || null
+          data_scadenza: newLotto.data_scadenza || null,
+          ubicazione_principale: newLotto.ubicazione_principale,
+          ubicazione_dettaglio: newLotto.ubicazione_dettaglio
         })
       });
       
       if (response.ok) {
         setShowAddLotto(false);
-        setNewLotto({ quantita: 1, data_scadenza: '' });
+        setNewLotto({ quantita: 1, data_scadenza: '', ubicazione_principale: 'Cantina', ubicazione_dettaglio: 'Armadio Grande' });
         setSelectedProduct(null);
         fetchInventario();
       }
@@ -591,9 +593,16 @@ export default function InventarioCantina() {
                               
                               return (
                                 <div key={lotto.id_lotto} className="bg-white p-3 rounded-lg border border-gray-200 flex justify-between items-center">
-                                  <div>
-                                    <span className="font-semibold text-gray-800">Lotto {index + 1}:</span>
-                                    <span className="ml-2 text-blue-600 font-bold">{lotto.quantita} unità</span>
+                                  <div className="flex-1">
+                                    <div className="flex items-center gap-3">
+                                      <span className="font-semibold text-gray-800">Lotto {index + 1}:</span>
+                                      <span className="text-blue-600 font-bold">{lotto.quantita} unità</span>
+                                      {(lotto.ubicazione_principale || lotto.ubicazione_dettaglio) && (
+                                        <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                                          📍 {lotto.ubicazione_principale}{lotto.ubicazione_dettaglio && ` → ${lotto.ubicazione_dettaglio}`}
+                                        </span>
+                                      )}
+                                    </div>
                                     {lotto.data_scadenza && (
                                       <div className="text-sm mt-1 flex items-center gap-2">
                                         <Calendar size={14} className="text-gray-500" />
@@ -776,6 +785,26 @@ export default function InventarioCantina() {
                   className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                 />
               </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Ubicazione Principale</label>
+                <input
+                  type="text"
+                  placeholder="es: Cantina, Casa, Box"
+                  value={newLotto.ubicazione_principale}
+                  onChange={e => setNewLotto({...newLotto, ubicazione_principale: e.target.value})}
+                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Ubicazione Dettaglio</label>
+                <input
+                  type="text"
+                  placeholder="es: Armadio Grande, Scaffale Sinistra"
+                  value={newLotto.ubicazione_dettaglio}
+                  onChange={e => setNewLotto({...newLotto, ubicazione_dettaglio: e.target.value})}
+                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                />
+              </div>
             </div>
             <div className="flex gap-3 mt-6">
               <button
@@ -823,6 +852,11 @@ export default function InventarioCantina() {
                       {lotto.data_scadenza && (
                         <p className="text-sm text-gray-600 mt-1">
                           Scadenza: {new Date(lotto.data_scadenza).toLocaleDateString('it-IT')}
+                        </p>
+                      )}
+                      {(lotto.ubicazione_principale || lotto.ubicazione_dettaglio) && (
+                        <p className="text-sm text-gray-600 mt-1">
+                          📍 Ubicazione: {lotto.ubicazione_principale}{lotto.ubicazione_dettaglio && ` → ${lotto.ubicazione_dettaglio}`}
                         </p>
                       )}
                     </div>
