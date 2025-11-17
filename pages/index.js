@@ -69,6 +69,7 @@ export default function InventarioCantina() {
   const [filterCategoria, setFilterCategoria] = useState('');
   const [filterSottocategoria, setFilterSottocategoria] = useState('');
   const [filterMarca, setFilterMarca] = useState('');
+  const [expandedProducts, setExpandedProducts] = useState(new Set());
 
   // Form states
   const [newProduct, setNewProduct] = useState({
@@ -125,6 +126,21 @@ export default function InventarioCantina() {
     } catch (error) {
       console.error('Errore caricamento lotti:', error);
     }
+  };
+
+  // Toggle espansione prodotto
+  const toggleExpand = (prodottoId) => {
+    const newExpanded = new Set(expandedProducts);
+    if (newExpanded.has(prodottoId)) {
+      newExpanded.delete(prodottoId);
+    } else {
+      newExpanded.add(prodottoId);
+      // Carica i lotti se non già caricati
+      if (!lotti[prodottoId]) {
+        fetchLottiProdotto(prodottoId);
+      }
+    }
+    setExpandedProducts(newExpanded);
   };
 
   // Calcola urgenza scadenza (giorni rimanenti)
@@ -488,66 +504,120 @@ export default function InventarioCantina() {
                   const giorni = getScadenzaUrgency(p.prossima_scadenza);
                   const badgeClass = getBadgeClass(giorni);
                   const urgencyText = getUrgencyText(giorni);
+                  const isExpanded = expandedProducts.has(p.prodotto_id);
+                  const lottiProdotto = lotti[p.prodotto_id] || [];
                   
                   return (
-                  <div key={p.prodotto_id} className="bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition-shadow">
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3">
-                          <h3 className="text-xl font-semibold text-gray-800">{p.nome}</h3>
-                          {p.prossima_scadenza && (
-                            <span className={`px-2 py-1 rounded-full text-xs font-bold ${badgeClass}`}>
-                              {urgencyText}
+                  <div key={p.prodotto_id} className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow">
+                    <div className="p-4">
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3">
+                            <h3 className="text-xl font-semibold text-gray-800">{p.nome}</h3>
+                            {p.prossima_scadenza && (
+                              <span className={`px-2 py-1 rounded-full text-xs font-bold ${badgeClass}`}>
+                                {urgencyText}
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex gap-4 mt-2 text-sm text-gray-600 flex-wrap">
+                            {p.marca && <span className="bg-gray-100 px-2 py-1 rounded">🏷️ {p.marca}</span>}
+                            {p.categoria && <span className="bg-blue-50 px-2 py-1 rounded">📁 {p.categoria}</span>}
+                            {p.sottocategoria && <span className="bg-purple-50 px-2 py-1 rounded">📂 {p.sottocategoria}</span>}
+                            {p.formato && <span className="bg-green-50 px-2 py-1 rounded">📦 {p.formato}</span>}
+                          </div>
+                          {p.note && <p className="text-sm text-gray-500 mt-2 italic">{p.note}</p>}
+                          <div className="flex flex-col gap-2 mt-3">
+                            <span className="text-lg font-bold text-blue-600">
+                              Quantità totale: {p.quantita_totale}
                             </span>
-                          )}
+                            {p.prossima_scadenza && (
+                              <LottoScadenzaInfo prodottoId={p.prodotto_id} prossimaScadenza={p.prossima_scadenza} />
+                            )}
+                          </div>
                         </div>
-                        <div className="flex gap-4 mt-2 text-sm text-gray-600 flex-wrap">
-                          {p.marca && <span className="bg-gray-100 px-2 py-1 rounded">🏷️ {p.marca}</span>}
-                          {p.categoria && <span className="bg-blue-50 px-2 py-1 rounded">📁 {p.categoria}</span>}
-                          {p.sottocategoria && <span className="bg-purple-50 px-2 py-1 rounded">📂 {p.sottocategoria}</span>}
-                          {p.formato && <span className="bg-green-50 px-2 py-1 rounded">📦 {p.formato}</span>}
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => toggleExpand(p.prodotto_id)}
+                            className="p-2 text-purple-600 hover:bg-purple-50 rounded transition-colors"
+                            title={isExpanded ? "Nascondi lotti" : "Mostra lotti"}
+                          >
+                            <Package size={20} />
+                          </button>
+                          <button
+                            onClick={() => {
+                              setSelectedProduct(p);
+                              fetchLottiProdotto(p.prodotto_id);
+                              setShowEditLotti(true);
+                            }}
+                            className="p-2 text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                            title="Gestisci lotti"
+                          >
+                            <Edit2 size={20} />
+                          </button>
+                          <button
+                            onClick={() => {
+                              setSelectedProduct(p);
+                              setShowAddLotto(true);
+                            }}
+                            className="p-2 text-green-600 hover:bg-green-50 rounded transition-colors"
+                            title="Aggiungi lotto"
+                          >
+                            <Plus size={20} />
+                          </button>
+                          <button
+                            onClick={() => deleteProduct(p.prodotto_id)}
+                            className="p-2 text-red-600 hover:bg-red-50 rounded transition-colors"
+                            title="Elimina prodotto"
+                          >
+                            <Trash2 size={20} />
+                          </button>
                         </div>
-                        {p.note && <p className="text-sm text-gray-500 mt-2 italic">{p.note}</p>}
-                        <div className="flex flex-col gap-2 mt-3">
-                          <span className="text-lg font-bold text-blue-600">
-                            Quantità totale: {p.quantita_totale}
-                          </span>
-                          {p.prossima_scadenza && (
-                            <LottoScadenzaInfo prodottoId={p.prodotto_id} prossimaScadenza={p.prossima_scadenza} />
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => {
-                            setSelectedProduct(p);
-                            fetchLottiProdotto(p.prodotto_id);
-                            setShowEditLotti(true);
-                          }}
-                          className="p-2 text-blue-600 hover:bg-blue-50 rounded transition-colors"
-                          title="Gestisci lotti"
-                        >
-                          <Edit2 size={20} />
-                        </button>
-                        <button
-                          onClick={() => {
-                            setSelectedProduct(p);
-                            setShowAddLotto(true);
-                          }}
-                          className="p-2 text-green-600 hover:bg-green-50 rounded transition-colors"
-                          title="Aggiungi lotto"
-                        >
-                          <Plus size={20} />
-                        </button>
-                        <button
-                          onClick={() => deleteProduct(p.prodotto_id)}
-                          className="p-2 text-red-600 hover:bg-red-50 rounded transition-colors"
-                          title="Elimina prodotto"
-                        >
-                          <Trash2 size={20} />
-                        </button>
                       </div>
                     </div>
+                    
+                    {/* Sezione espandibile con i lotti */}
+                    {isExpanded && (
+                      <div className="border-t border-gray-200 p-4 bg-gray-50">
+                        <h4 className="font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                          <Package size={16} />
+                          Lotti disponibili
+                        </h4>
+                        {lottiProdotto.length > 0 ? (
+                          <div className="space-y-2">
+                            {lottiProdotto.map((lotto, index) => {
+                              const giorniLotto = getScadenzaUrgency(lotto.data_scadenza);
+                              const badgeClassLotto = getBadgeClass(giorniLotto);
+                              
+                              return (
+                                <div key={lotto.id_lotto} className="bg-white p-3 rounded-lg border border-gray-200 flex justify-between items-center">
+                                  <div>
+                                    <span className="font-semibold text-gray-800">Lotto {index + 1}:</span>
+                                    <span className="ml-2 text-blue-600 font-bold">{lotto.quantita} unità</span>
+                                    {lotto.data_scadenza && (
+                                      <div className="text-sm mt-1 flex items-center gap-2">
+                                        <Calendar size={14} className="text-gray-500" />
+                                        <span className="text-gray-600">
+                                          Scadenza: {new Date(lotto.data_scadenza).toLocaleDateString('it-IT')}
+                                        </span>
+                                        <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${badgeClassLotto}`}>
+                                          {getUrgencyText(giorniLotto)}
+                                        </span>
+                                      </div>
+                                    )}
+                                    {!lotto.data_scadenza && (
+                                      <span className="ml-2 text-sm text-gray-500">(senza scadenza)</span>
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        ) : (
+                          <p className="text-gray-500 text-sm">Nessun lotto disponibile</p>
+                        )}
+                      </div>
+                    )}
                   </div>
                   );
                 })}
