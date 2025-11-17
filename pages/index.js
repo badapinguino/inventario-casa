@@ -1,6 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Trash2, Edit2, Package, TrendingDown, Calendar, BarChart3, AlertCircle } from 'lucide-react';
 
+// SOSTITUISCI QUESTI VALORI CON LE TUE CREDENZIALI SUPABASE
+// Oppure, quando usi Next.js su Vercel, queste verranno caricate automaticamente
+/* const SUPABASE_URL = typeof window !== 'undefined' && window.NEXT_PUBLIC_SUPABASE_URL 
+  ? window.NEXT_PUBLIC_SUPABASE_URL 
+  : 'https://tuo-progetto.supabase.co';
+const SUPABASE_ANON_KEY = typeof window !== 'undefined' && window.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  ? window.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  : 'tua-anon-key'; */
+
 // All'inizio del file, prima del componente
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -16,6 +25,12 @@ export default function InventarioCantina() {
   const [showEditLotti, setShowEditLotti] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [stats, setStats] = useState(null);
+
+  // Filtri
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterCategoria, setFilterCategoria] = useState('');
+  const [filterSottocategoria, setFilterSottocategoria] = useState('');
+  const [filterMarca, setFilterMarca] = useState('');
 
   // Form states
   const [newProduct, setNewProduct] = useState({
@@ -225,6 +240,28 @@ export default function InventarioCantina() {
     }
   }, [activeTab]);
 
+  // Filtra prodotti
+  const prodottiFiltrati = prodotti.filter(p => {
+    const matchNome = p.nome.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchCategoria = !filterCategoria || p.categoria === filterCategoria;
+    const matchSottocategoria = !filterSottocategoria || p.sottocategoria === filterSottocategoria;
+    const matchMarca = !filterMarca || p.marca === filterMarca;
+    return matchNome && matchCategoria && matchSottocategoria && matchMarca;
+  });
+
+  // Ottieni valori unici per i filtri
+  const categorie = [...new Set(prodotti.map(p => p.categoria).filter(Boolean))].sort();
+  const sottocategorie = [...new Set(prodotti.map(p => p.sottocategoria).filter(Boolean))].sort();
+  const marche = [...new Set(prodotti.map(p => p.marca).filter(Boolean))].sort();
+
+  // Reset filtri
+  const resetFiltri = () => {
+    setSearchTerm('');
+    setFilterCategoria('');
+    setFilterSottocategoria('');
+    setFilterMarca('');
+  };
+
   if (error) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
@@ -290,13 +327,69 @@ export default function InventarioCantina() {
               </button>
             </div>
 
+            {/* Filtri */}
+            <div className="bg-white rounded-lg shadow-md p-4 mb-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
+                <input
+                  type="text"
+                  placeholder="🔍 Cerca per nome..."
+                  value={searchTerm}
+                  onChange={e => setSearchTerm(e.target.value)}
+                  className="px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                />
+                <select
+                  value={filterCategoria}
+                  onChange={e => setFilterCategoria(e.target.value)}
+                  className="px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                >
+                  <option value="">Tutte le categorie</option>
+                  {categorie.map(cat => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </select>
+                <select
+                  value={filterSottocategoria}
+                  onChange={e => setFilterSottocategoria(e.target.value)}
+                  className="px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                >
+                  <option value="">Tutte le sottocategorie</option>
+                  {sottocategorie.map(sub => (
+                    <option key={sub} value={sub}>{sub}</option>
+                  ))}
+                </select>
+                <select
+                  value={filterMarca}
+                  onChange={e => setFilterMarca(e.target.value)}
+                  className="px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                >
+                  <option value="">Tutte le marche</option>
+                  {marche.map(marca => (
+                    <option key={marca} value={marca}>{marca}</option>
+                  ))}
+                </select>
+                <button
+                  onClick={resetFiltri}
+                  className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium"
+                >
+                  Resetta filtri
+                </button>
+              </div>
+              <div className="mt-3 text-sm text-gray-600">
+                Mostrando {prodottiFiltrati.length} di {prodotti.length} prodotti
+              </div>
+            </div>
+
             {loading ? (
               <div className="text-center py-12">
                 <div className="text-gray-400">Caricamento...</div>
               </div>
+            ) : prodottiFiltrati.length === 0 ? (
+              <div className="text-center py-12 bg-white rounded-lg shadow-md">
+                <p className="text-gray-500">Nessun prodotto trovato con i filtri selezionati</p>
+              </div>
             ) : (
               <div className="grid gap-4">
-                {prodotti.map(p => (
+                {prodottiFiltrati.map(p => (
                   <div key={p.prodotto_id} className="bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition-shadow">
                     <div className="flex justify-between items-start">
                       <div className="flex-1">
