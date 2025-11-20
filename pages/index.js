@@ -444,18 +444,48 @@ export default function InventarioCantina() {
         {activeTab === 'statistiche' && stats && (
           <div className="grid md:grid-cols-3 gap-6">
             <div className="bg-white rounded-lg shadow-md p-6">
-              <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2"><Package className="text-green-600" />Più in Scorta</h3>
-              <div className="space-y-3">{stats.piuScorta.map(p => (<div key={p.prodotto_id} className="flex justify-between items-center"><span className="text-gray-700">{p.nome}</span><span className="font-bold text-green-600">{p.quantita_totale}</span></div>))}</div>
+              <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                <Package className="text-green-600" />
+                Più in Scorta
+              </h3>
+              <div className="space-y-3">
+                {stats.piuScorta.map(p => (
+                  <div key={p.prodotto_id} className="flex justify-between items-center">
+                    <span className="text-gray-700">{p.nome}</span>
+                    <span className="font-bold text-green-600">{p.quantita_totale}</span>
+                  </div>
+                ))}
+              </div>
             </div>
 
             <div className="bg-white rounded-lg shadow-md p-6">
-              <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2"><TrendingDown className="text-orange-600" />In Esaurimento</h3>
-              <div className="space-y-3">{stats.inEsaurimento.map(p => (<div key={p.prodotto_id} className="flex justify-between items-center"><span className="text-gray-700">{p.nome}</span><span className="font-bold text-orange-600">{p.quantita_totale}</span></div>))}</div>
+              <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                <TrendingDown className="text-orange-600" />
+                In Esaurimento
+              </h3>
+              <div className="space-y-3">
+                {stats.inEsaurimento.map(p => (
+                  <div key={p.prodotto_id} className="flex justify-between items-center">
+                    <span className="text-gray-700">{p.nome}</span>
+                    <span className="font-bold text-orange-600">{p.quantita_totale}</span>
+                  </div>
+                ))}
+              </div>
             </div>
 
             <div className="bg-white rounded-lg shadow-md p-6">
-              <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2"><Calendar className="text-red-600" />Prossime Scadenze</h3>
-              <div className="space-y-3">{stats.prossimeScadenze.map(p => (<div key={p.prodotto_id} className="flex flex-col"><span className="text-gray-700 font-medium">{p.nome}</span><span className="text-sm text-red-600">{new Date(p.prossima_scadenza).toLocaleDateString('it-IT')}</span></div>))}</div>
+              <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                <Calendar className="text-red-600" />
+                Prossime Scadenze
+              </h3>
+              <div className="space-y-3">
+                {stats.prossimeScadenze.map(p => (
+                  <div key={p.prodotto_id} className="flex flex-col">
+                    <span className="text-gray-700 font-medium">{p.nome}</span>
+                    <span className="text-sm text-red-600">{new Date(p.prossima_scadenza).toLocaleDateString('it-IT')}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         )}
