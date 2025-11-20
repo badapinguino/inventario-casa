@@ -42,6 +42,82 @@ function SmartDropdown({ label, value, onChange, options }) {
           </div>
         )}
       </div>
+
+      {showAddProduct && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-md w-full p-6 max-h-[90vh] overflow-y-auto">
+            <h3 className="text-xl font-bold mb-4">Nuovo Prodotto</h3>
+            <div className="space-y-3">
+              <input type="text" placeholder="Nome *" value={newProduct.nome} onChange={e => setNewProduct({...newProduct, nome: e.target.value})} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+              <SmartDropdown label="Marca" value={newProduct.marca} onChange={e => setNewProduct({...newProduct, marca: e})} options={marche} />
+              <SmartDropdown label="Categoria" value={newProduct.categoria} onChange={e => setNewProduct({...newProduct, categoria: e})} options={categorie} />
+              <SmartDropdown label="Sottocategoria" value={newProduct.sottocategoria} onChange={e => setNewProduct({...newProduct, sottocategoria: e})} options={sottocategorie} />
+              <SmartDropdown label="Formato" value={newProduct.formato} onChange={e => setNewProduct({...newProduct, formato: e})} options={formati} />
+              <textarea placeholder="Note" value={newProduct.note} onChange={e => setNewProduct({...newProduct, note: e.target.value})} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" rows="2" />
+            </div>
+            <div className="flex gap-3 mt-6">
+              <button onClick={() => setShowAddProduct(false)} className="flex-1 px-4 py-2 border rounded-lg hover:bg-gray-50 transition-colors">Annulla</button>
+              <button onClick={addProduct} disabled={!newProduct.nome} className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">Aggiungi</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showAddLotto && selectedProduct && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-md w-full p-6">
+            <h3 className="text-xl font-bold mb-2">Aggiungi Lotto</h3>
+            <p className="text-gray-600 mb-4">Per: {selectedProduct.nome}</p>
+            <div className="space-y-3">
+              <div>
+                <label className="block text-sm font-medium mb-1">Quantità</label>
+                <input type="number" min="1" value={newLotto.quantita} onChange={e => setNewLotto({...newLotto, quantita: e.target.value})} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Data Scadenza (opzionale)</label>
+                <input type="date" value={newLotto.data_scadenza} onChange={e => setNewLotto({...newLotto, data_scadenza: e.target.value})} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+              </div>
+              <SmartDropdown label="Ubicazione Principale" value={newLotto.ubicazione_principale} onChange={e => setNewLotto({...newLotto, ubicazione_principale: e})} options={ubicazioniPrincipali} />
+              <SmartDropdown label="Ubicazione Dettaglio" value={newLotto.ubicazione_dettaglio} onChange={e => setNewLotto({...newLotto, ubicazione_dettaglio: e})} options={ubicazioniDettagli} />
+            </div>
+            <div className="flex gap-3 mt-6">
+              <button onClick={() => { setShowAddLotto(false); setSelectedProduct(null); }} className="flex-1 px-4 py-2 border rounded-lg hover:bg-gray-50 transition-colors">Annulla</button>
+              <button onClick={addLotto} className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">Aggiungi Lotto</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showEditLotti && selectedProduct && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
+            <h3 className="text-xl font-bold mb-2">Gestisci Lotti</h3>
+            <p className="text-gray-600 mb-4">Prodotto: {selectedProduct.nome}</p>
+            {lotti[selectedProduct.prodotto_id]?.length > 0 ? (
+              <div className="space-y-3">
+                {lotti[selectedProduct.prodotto_id].map(lotto => (
+                  <div key={lotto.id_lotto} className="flex items-center gap-3 p-3 border rounded-lg">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3">
+                        <label className="text-sm font-medium">Quantità:</label>
+                        <input type="number" min="0" value={lotto.quantita} onChange={(e) => updateLottoQuantita(lotto.id_lotto, e.target.value, selectedProduct.prodotto_id)} className="w-20 px-2 py-1 border rounded focus:ring-2 focus:ring-blue-500 outline-none" />
+                      </div>
+                      {lotto.data_scadenza && (<p className="text-sm text-gray-600 mt-1">Scadenza: {new Date(lotto.data_scadenza).toLocaleDateString('it-IT')}</p>)}
+                      {(lotto.ubicazione_principale || lotto.ubicazione_dettaglio) && (<p className="text-sm text-gray-600 mt-1">📍 Ubicazione: {lotto.ubicazione_principale}{lotto.ubicazione_dettaglio && ` → ${lotto.ubicazione_dettaglio}`}</p>)}
+                    </div>
+                    <button onClick={() => deleteLotto(lotto.id_lotto, selectedProduct.prodotto_id)} className="p-2 text-red-600 hover:bg-red-50 rounded transition-colors" title="Elimina lotto"><Trash2 size={20} /></button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-500 text-center py-4">Nessun lotto presente</p>
+            )}
+            <div className="flex gap-3 mt-6">
+              <button onClick={() => { setShowEditLotti(false); setSelectedProduct(null); }} className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">Chiudi</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
