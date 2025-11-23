@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, Edit2, Package, TrendingDown, Calendar, BarChart3, AlertCircle } from 'lucide-react';
+import { Plus, Trash2, Edit2, Package, TrendingDown, Calendar, BarChart3, AlertCircle, Save } from 'lucide-react';
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -523,7 +523,7 @@ export default function InventarioCantina() {
                       {(lotto.ubicazione_principale || lotto.ubicazione_dettaglio) && (<p className="text-sm text-gray-600 mt-1">📍 Ubicazione: {lotto.ubicazione_principale}{lotto.ubicazione_dettaglio && ` → ${lotto.ubicazione_dettaglio}`}</p>)}
                     </div>
                     <div className="flex gap-1">
-                      <button onClick={() => updateLottoQuantita(lotto.id_lotto, editingLottoQuantities[lotto.id_lotto] !== undefined ? editingLottoQuantities[lotto.id_lotto] : lotto.quantita, selectedProduct.prodotto_id)} className="p-2 text-green-600 hover:bg-green-50 rounded transition-colors" title="Salva">✓</button>
+                      <button onClick={() => updateLottoQuantita(lotto.id_lotto, editingLottoQuantities[lotto.id_lotto] !== undefined ? editingLottoQuantities[lotto.id_lotto] : lotto.quantita, selectedProduct.prodotto_id)} className="px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2 text-sm font-medium" title="Salva"><Save size={16} />Salva</button>
                       <button onClick={() => deleteLotto(lotto.id_lotto, selectedProduct.prodotto_id)} className="p-2 text-red-600 hover:bg-red-50 rounded transition-colors" title="Elimina lotto"><Trash2 size={20} /></button>
                     </div>
                   </div>
