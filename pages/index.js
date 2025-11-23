@@ -42,6 +42,89 @@ function SmartDropdown({ label, value, onChange, options }) {
           </div>
         )}
       </div>
+
+      {showAddProduct && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-md w-full p-6 max-h-[90vh] overflow-y-auto">
+            <h3 className="text-xl font-bold mb-4">Nuovo Prodotto</h3>
+            <div className="space-y-3">
+              <input type="text" placeholder="Nome *" value={newProduct.nome} onChange={e => setNewProduct({...newProduct, nome: e.target.value})} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+              <SmartDropdown label="Marca" value={newProduct.marca} onChange={e => setNewProduct({...newProduct, marca: e})} options={marche} />
+              <SmartDropdown label="Categoria" value={newProduct.categoria} onChange={e => setNewProduct({...newProduct, categoria: e})} options={categorie} />
+              <SmartDropdown label="Sottocategoria" value={newProduct.sottocategoria} onChange={e => setNewProduct({...newProduct, sottocategoria: e})} options={sottocategorie} />
+              <SmartDropdown label="Formato" value={newProduct.formato} onChange={e => setNewProduct({...newProduct, formato: e})} options={formati} />
+              <textarea placeholder="Note" value={newProduct.note} onChange={e => setNewProduct({...newProduct, note: e.target.value})} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" rows="2" />
+            </div>
+            <div className="flex gap-3 mt-6">
+              <button onClick={() => setShowAddProduct(false)} className="flex-1 px-4 py-2 border rounded-lg hover:bg-gray-50 transition-colors">Annulla</button>
+              <button onClick={addProduct} disabled={!newProduct.nome} className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">Aggiungi</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showAddLotto && selectedProduct && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-md w-full p-6">
+            <h3 className="text-xl font-bold mb-2">Aggiungi Lotto</h3>
+            <p className="text-gray-600 mb-4">Per: {selectedProduct.nome}</p>
+            <div className="space-y-3">
+              <div>
+                <label className="block text-sm font-medium mb-1">Quantità</label>
+                <input type="number" min="1" value={newLotto.quantita} onChange={e => setNewLotto({...newLotto, quantita: e.target.value})} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Data Scadenza (opzionale)</label>
+                <input type="date" value={newLotto.data_scadenza} onChange={e => setNewLotto({...newLotto, data_scadenza: e.target.value})} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+              </div>
+              <SmartDropdown label="Ubicazione Principale" value={newLotto.ubicazione_principale} onChange={e => setNewLotto({...newLotto, ubicazione_principale: e})} options={ubicazioniPrincipali} />
+              <SmartDropdown label="Ubicazione Dettaglio" value={newLotto.ubicazione_dettaglio} onChange={e => setNewLotto({...newLotto, ubicazione_dettaglio: e})} options={ubicazioniDettagli} />
+            </div>
+            <div className="flex gap-3 mt-6">
+              <button onClick={() => { setShowAddLotto(false); setSelectedProduct(null); }} className="flex-1 px-4 py-2 border rounded-lg hover:bg-gray-50 transition-colors">Annulla</button>
+              <button onClick={addLotto} className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">Aggiungi Lotto</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showEditLotti && selectedProduct && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
+            <h3 className="text-xl font-bold mb-2">Gestisci Lotti</h3>
+            <p className="text-gray-600 mb-4">Prodotto: {selectedProduct.nome}</p>
+            {lotti[selectedProduct.prodotto_id]?.length > 0 ? (
+              <div className="space-y-3">
+                {lotti[selectedProduct.prodotto_id].map(lotto => (
+                  <div key={lotto.id_lotto} className="flex items-center gap-3 p-3 border rounded-lg">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <label className="text-sm font-medium">Quantità:</label>
+                        <div className="flex items-center border border-gray-300 rounded-lg">
+                          <button onClick={() => setEditingLottoQuantities({...editingLottoQuantities, [lotto.id_lotto]: Math.max(0, (editingLottoQuantities[lotto.id_lotto] || lotto.quantita) - 1)})} className="px-3 py-1 hover:bg-gray-100 text-lg font-bold">−</button>
+                          <input type="number" min="0" value={editingLottoQuantities[lotto.id_lotto] !== undefined ? editingLottoQuantities[lotto.id_lotto] : lotto.quantita} onChange={(e) => setEditingLottoQuantities({...editingLottoQuantities, [lotto.id_lotto]: parseInt(e.target.value) || 0})} className="w-16 px-2 py-1 text-center border-x border-gray-300 outline-none" />
+                          <button onClick={() => setEditingLottoQuantities({...editingLottoQuantities, [lotto.id_lotto]: (editingLottoQuantities[lotto.id_lotto] || lotto.quantita) + 1})} className="px-3 py-1 hover:bg-gray-100 text-lg font-bold">+</button>
+                        </div>
+                      </div>
+                      {lotto.data_scadenza && (<p className="text-sm text-gray-600 mt-1">Scadenza: {new Date(lotto.data_scadenza).toLocaleDateString('it-IT')}</p>)}
+                      {(lotto.ubicazione_principale || lotto.ubicazione_dettaglio) && (<p className="text-sm text-gray-600 mt-1">📍 Ubicazione: {lotto.ubicazione_principale}{lotto.ubicazione_dettaglio && ` → ${lotto.ubicazione_dettaglio}`}</p>)}
+                    </div>
+                    <div className="flex gap-1">
+                      <button onClick={() => updateLottoQuantita(lotto.id_lotto, editingLottoQuantities[lotto.id_lotto] !== undefined ? editingLottoQuantities[lotto.id_lotto] : lotto.quantita, selectedProduct.prodotto_id)} className="p-2 text-green-600 hover:bg-green-50 rounded transition-colors" title="Salva"><Trash2 size={16} className="text-green-600" /> ✓</button>
+                      <button onClick={() => deleteLotto(lotto.id_lotto, selectedProduct.prodotto_id)} className="p-2 text-red-600 hover:bg-red-50 rounded transition-colors" title="Elimina lotto"><Trash2 size={20} /></button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-500 text-center py-4">Nessun lotto presente</p>
+            )}
+            <div className="flex gap-3 mt-6">
+              <button onClick={() => { setShowEditLotti(false); setSelectedProduct(null); setEditingLottoQuantities({}); }} className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">Chiudi</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -92,6 +175,7 @@ export default function InventarioCantina() {
   const [expandedProducts, setExpandedProducts] = useState(new Set());
   const [newProduct, setNewProduct] = useState({ nome: '', marca: '', categoria: '', sottocategoria: '', formato: '', note: '' });
   const [newLotto, setNewLotto] = useState({ quantita: 1, data_scadenza: '', ubicazione_principale: 'Cantina', ubicazione_dettaglio: 'Armadio Grande' });
+  const [editingLottoQuantities, setEditingLottoQuantities] = useState({});
 
   useEffect(() => {
     if (!SUPABASE_URL || !SUPABASE_ANON_KEY) setError('Configurazione Supabase mancante. Verifica le environment variables su Vercel.');
@@ -182,14 +266,16 @@ export default function InventarioCantina() {
 
   const addProduct = async () => {
     try {
-      await fetch(`${SUPABASE_URL}/rest/v1/prodotti`, {
+      const response = await fetch(`${SUPABASE_URL}/rest/v1/prodotti`, {
         method: 'POST',
         headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
         body: JSON.stringify(newProduct)
       });
-      setShowAddProduct(false);
-      setNewProduct({ nome: '', marca: '', categoria: '', sottocategoria: '', formato: '', note: '' });
-      fetchInventario();
+      if (response.ok) {
+        setShowAddProduct(false);
+        setNewProduct({ nome: '', marca: '', categoria: '', sottocategoria: '', formato: '', note: '' });
+        fetchInventario();
+      }
     } catch (error) {
       console.error('Errore aggiunta prodotto:', error);
       alert('Errore nell\'aggiunta del prodotto');
@@ -198,15 +284,17 @@ export default function InventarioCantina() {
 
   const addLotto = async () => {
     try {
-      await fetch(`${SUPABASE_URL}/rest/v1/lotti`, {
+      const response = await fetch(`${SUPABASE_URL}/rest/v1/lotti`, {
         method: 'POST',
         headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
         body: JSON.stringify({ prodotto_id: selectedProduct.prodotto_id, quantita: parseInt(newLotto.quantita), data_scadenza: newLotto.data_scadenza || null, ubicazione_principale: newLotto.ubicazione_principale, ubicazione_dettaglio: newLotto.ubicazione_dettaglio })
       });
-      setShowAddLotto(false);
-      setNewLotto({ quantita: 1, data_scadenza: '', ubicazione_principale: 'Cantina', ubicazione_dettaglio: 'Armadio Grande' });
-      setSelectedProduct(null);
-      fetchInventario();
+      if (response.ok) {
+        setShowAddLotto(false);
+        setNewLotto({ quantita: 1, data_scadenza: '', ubicazione_principale: 'Cantina', ubicazione_dettaglio: 'Armadio Grande' });
+        setSelectedProduct(null);
+        fetchInventario();
+      }
     } catch (error) {
       console.error('Errore aggiunta lotto:', error);
       alert('Errore nell\'aggiunta del lotto');
@@ -440,96 +528,48 @@ export default function InventarioCantina() {
         {activeTab === 'statistiche' && stats && (
           <div className="grid md:grid-cols-3 gap-6">
             <div className="bg-white rounded-lg shadow-md p-6">
-              <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2"><Package className="text-green-600" />Più in Scorta</h3>
-              <div className="space-y-3">{stats.piuScorta.map(p => (<div key={p.prodotto_id} className="flex justify-between items-center"><span className="text-gray-700">{p.nome}</span><span className="font-bold text-green-600">{p.quantita_totale}</span></div>))}</div>
-            </div>
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2"><TrendingDown className="text-orange-600" />In Esaurimento</h3>
-              <div className="space-y-3">{stats.inEsaurimento.map(p => (<div key={p.prodotto_id} className="flex justify-between items-center"><span className="text-gray-700">{p.nome}</span><span className="font-bold text-orange-600">{p.quantita_totale}</span></div>))}</div>
-            </div>
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2"><Calendar className="text-red-600" />Prossime Scadenze</h3>
-              <div className="space-y-3">{stats.prossimeScadenze.map(p => (<div key={p.prodotto_id} className="flex flex-col"><span className="text-gray-700 font-medium">{p.nome}</span><span className="text-sm text-red-600">{new Date(p.prossima_scadenza).toLocaleDateString('it-IT')}</span></div>))}</div>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {showAddProduct && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-md w-full p-6 max-h-[90vh] overflow-y-auto">
-            <h3 className="text-xl font-bold mb-4">Nuovo Prodotto</h3>
-            <div className="space-y-3">
-              <input type="text" placeholder="Nome *" value={newProduct.nome} onChange={e => setNewProduct({...newProduct, nome: e.target.value})} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
-              <SmartDropdown label="Marca" value={newProduct.marca} onChange={e => setNewProduct({...newProduct, marca: e})} options={marche} />
-              <SmartDropdown label="Categoria" value={newProduct.categoria} onChange={e => setNewProduct({...newProduct, categoria: e})} options={categorie} />
-              <SmartDropdown label="Sottocategoria" value={newProduct.sottocategoria} onChange={e => setNewProduct({...newProduct, sottocategoria: e})} options={sottocategorie} />
-              <SmartDropdown label="Formato" value={newProduct.formato} onChange={e => setNewProduct({...newProduct, formato: e})} options={formati} />
-              <textarea placeholder="Note" value={newProduct.note} onChange={e => setNewProduct({...newProduct, note: e.target.value})} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" rows="2" />
-            </div>
-            <div className="flex gap-3 mt-6">
-              <button onClick={() => setShowAddProduct(false)} className="flex-1 px-4 py-2 border rounded-lg hover:bg-gray-50 transition-colors">Annulla</button>
-              <button onClick={addProduct} disabled={!newProduct.nome} className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">Aggiungi</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showAddLotto && selectedProduct && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-md w-full p-6">
-            <h3 className="text-xl font-bold mb-2">Aggiungi Lotto</h3>
-            <p className="text-gray-600 mb-4">Per: {selectedProduct.nome}</p>
-            <div className="space-y-3">
-              <div>
-                <label className="block text-sm font-medium mb-1">Quantità</label>
-                <input type="number" min="1" value={newLotto.quantita} onChange={e => setNewLotto({...newLotto, quantita: e.target.value})} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Data Scadenza (opzionale)</label>
-                <input type="date" value={newLotto.data_scadenza} onChange={e => setNewLotto({...newLotto, data_scadenza: e.target.value})} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
-              </div>
-              <SmartDropdown label="Ubicazione Principale" value={newLotto.ubicazione_principale} onChange={e => setNewLotto({...newLotto, ubicazione_principale: e})} options={ubicazioniPrincipali} />
-              <SmartDropdown label="Ubicazione Dettaglio" value={newLotto.ubicazione_dettaglio} onChange={e => setNewLotto({...newLotto, ubicazione_dettaglio: e})} options={ubicazioniDettagli} />
-            </div>
-            <div className="flex gap-3 mt-6">
-              <button onClick={() => { setShowAddLotto(false); setSelectedProduct(null); }} className="flex-1 px-4 py-2 border rounded-lg hover:bg-gray-50 transition-colors">Annulla</button>
-              <button onClick={addLotto} className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">Aggiungi Lotto</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showEditLotti && selectedProduct && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
-            <h3 className="text-xl font-bold mb-2">Gestisci Lotti</h3>
-            <p className="text-gray-600 mb-4">Prodotto: {selectedProduct.nome}</p>
-            {lotti[selectedProduct.prodotto_id]?.length > 0 ? (
+              <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                <Package className="text-green-600" />
+                Più in Scorta
+              </h3>
               <div className="space-y-3">
-                {lotti[selectedProduct.prodotto_id].map(lotto => (
-                  <div key={lotto.id_lotto} className="flex items-center gap-3 p-3 border rounded-lg">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3">
-                        <label className="text-sm font-medium">Quantità:</label>
-                        <input type="number" min="0" value={lotto.quantita} onChange={(e) => updateLottoQuantita(lotto.id_lotto, e.target.value, selectedProduct.prodotto_id)} className="w-20 px-2 py-1 border rounded focus:ring-2 focus:ring-blue-500 outline-none" />
-                      </div>
-                      {lotto.data_scadenza && (<p className="text-sm text-gray-600 mt-1">Scadenza: {new Date(lotto.data_scadenza).toLocaleDateString('it-IT')}</p>)}
-                      {(lotto.ubicazione_principale || lotto.ubicazione_dettaglio) && (<p className="text-sm text-gray-600 mt-1">📍 Ubicazione: {lotto.ubicazione_principale}{lotto.ubicazione_dettaglio && ` → ${lotto.ubicazione_dettaglio}`}</p>)}
-                    </div>
-                    <button onClick={() => deleteLotto(lotto.id_lotto, selectedProduct.prodotto_id)} className="p-2 text-red-600 hover:bg-red-50 rounded transition-colors" title="Elimina lotto"><Trash2 size={20} /></button>
+                {stats.piuScorta.map(p => (
+                  <div key={p.prodotto_id} className="flex justify-between items-center">
+                    <span className="text-gray-700">{p.nome}</span>
+                    <span className="font-bold text-green-600">{p.quantita_totale}</span>
                   </div>
                 ))}
               </div>
-            ) : (
-              <p className="text-gray-500 text-center py-4">Nessun lotto presente</p>
-            )}
-            <div className="flex gap-3 mt-6">
-              <button onClick={() => { setShowEditLotti(false); setSelectedProduct(null); }} className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">Chiudi</button>
+            </div>
+
+            <div className="bg-white rounded-lg shadow-md p-6">
+              <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                <TrendingDown className="text-orange-600" />
+                In Esaurimento
+              </h3>
+              <div className="space-y-3">
+                {stats.inEsaurimento.map(p => (
+                  <div key={p.prodotto_id} className="flex justify-between items-center">
+                    <span className="text-gray-700">{p.nome}</span>
+                    <span className="font-bold text-orange-600">{p.quantita_totale}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="bg-white rounded-lg shadow-md p-6">
+              <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                <Calendar className="text-red-600" />
+                Prossime Scadenze
+              </h3>
+              <div className="space-y-3">
+                {stats.prossimeScadenze.map(p => (
+                  <div key={p.prodotto_id} className="flex flex-col">
+                    <span className="text-gray-700 font-medium">{p.nome}</span>
+                    <span className="text-sm text-red-600">{new Date(p.prossima_scadenza).toLocaleDateString('it-IT')}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
-      )}
-    </div>
-  );
-}
+        )}
